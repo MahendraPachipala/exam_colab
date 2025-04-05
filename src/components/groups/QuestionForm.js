@@ -9,15 +9,38 @@ export default function QuestionForm({ onSubmit }) {
   const [hasPermission, setHasPermission] = useState(null);
   const [devices, setDevices] = useState([]);
   const [selectedDevice, setSelectedDevice] = useState('');
+  const [error, setError] = useState(null);
+  const [isMobile, setIsMobile] = useState(false);
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
+  const streamRef = useRef(null);
+
+  // Check if device is mobile
+  useEffect(() => {
+    setIsMobile(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
+  }, []);
+
+  // Check secure context
+  const isSecureContext = () => {
+    return window.isSecureContext;
+  };
 
   // Get available camera devices
   useEffect(() => {
     if (!isCameraOpen) return;
 
+    if (!isSecureContext()) {
+      setError('Camera access requires a secure context (HTTPS)');
+      setHasPermission(false);
+      return;
+    }
+
     const getDevices = async () => {
       try {
+        // First get user media to ensure permissions are granted
+        const tempStream = await navigator.mediaDevices.getUserMedia({ video: true });
+        tempStream.getTracks().forEach(track => track.stop());
+        
         const devices = await navigator.mediaDevices.enumerateDevices();
         const videoDevices = devices.filter(device => device.kind === 'videoinput');
         setDevices(videoDevices);
@@ -26,6 +49,8 @@ export default function QuestionForm({ onSubmit }) {
         }
       } catch (error) {
         console.error('Error enumerating devices:', error);
+        setError('Could not access camera. Please check permissions.');
+        setHasPermission(false);
       }
     };
 
@@ -36,31 +61,73 @@ export default function QuestionForm({ onSubmit }) {
   useEffect(() => {
     if (!isCameraOpen || !selectedDevice) return;
 
-    let stream = null;
-
     const startCamera = async () => {
       try {
-        stream = await navigator.mediaDevices.getUserMedia({
-          video: { deviceId: selectedDevice }
-        });
+        // Stop any existing stream
+        if (streamRef.current) {
+          streamRef.current.getTracks().forEach(track => track.stop());
+        }
+
+        const constraints = { 
+          video: { 
+            deviceId: selectedDevice,
+            facingMode: isMobile ? 'environment' : 'user', // Prefer rear camera on mobile
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          } 
+        };
+
+        const stream = await navigator.mediaDevices.getUserMedia(constraints);
         setHasPermission(true);
+        setError(null);
+        streamRef.current = stream;
+        
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
+          // iOS requires playing to be triggered by user interaction
+          videoRef.current.play().catch(err => {
+            console.error('Error playing video:', err);
+            setError('Could not start camera. Tap to try again.');
+          });
         }
       } catch (err) {
         console.error('Error accessing camera:', err);
         setHasPermission(false);
+        setError('Could not access camera. Please check permissions.');
+        
+        // Try again with less specific constraints if the first attempt fails
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ 
+            video: {
+              facingMode: isMobile ? 'environment' : 'user'
+            } 
+          });
+          setHasPermission(true);
+          setError(null);
+          streamRef.current = stream;
+          
+          if (videoRef.current) {
+            videoRef.current.srcObject = stream;
+            videoRef.current.play().catch(err => {
+              console.error('Error playing video:', err);
+            });
+          }
+        } catch (fallbackErr) {
+          console.error('Fallback camera access failed:', fallbackErr);
+          setError('Camera access failed. Please try uploading an image instead.');
+        }
       }
     };
 
     startCamera();
 
     return () => {
-      if (stream) {
-        stream.getTracks().forEach(track => track.stop());
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+        streamRef.current = null;
       }
     };
-  }, [isCameraOpen, selectedDevice]);
+  }, [isCameraOpen, selectedDevice, isMobile]);
 
   const captureImage = () => {
     if (!videoRef.current || !canvasRef.current) return;
@@ -78,7 +145,32 @@ export default function QuestionForm({ onSubmit }) {
       const file = new File([blob], 'captured-image.png', { type: 'image/png' });
       setImageFile(file);
       setIsCameraOpen(false);
+      
+      // Clean up stream after capture
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+        streamRef.current = null;
+      }
     }, 'image/png');
+  };
+
+  const openCamera = async () => {
+    if (!isSecureContext()) {
+      setError('Camera requires HTTPS connection');
+      return;
+    }
+
+    try {
+      // First request permission with simple constraints
+      const tempStream = await navigator.mediaDevices.getUserMedia({ video: true });
+      tempStream.getTracks().forEach(track => track.stop());
+      
+      setIsCameraOpen(true);
+      setError(null);
+    } catch (err) {
+      console.error('Camera permission denied:', err);
+      setError('Camera access was denied. Please enable permissions in your browser settings.');
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -114,6 +206,17 @@ export default function QuestionForm({ onSubmit }) {
         UPLOAD QUESTION
       </h2>
       
+      {error && (
+        <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4">
+          <p>{error}</p>
+          {!isSecureContext() && (
+            <p className="mt-2 text-sm">
+              You're currently on: {window.location.protocol}//{window.location.host}
+            </p>
+          )}
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
           <label className="block text-xs font-medium text-black/60 mb-1 tracking-widest">
@@ -145,6 +248,7 @@ export default function QuestionForm({ onSubmit }) {
                     ref={videoRef} 
                     autoPlay 
                     playsInline
+                    muted // Required for autoplay on iOS
                     className="w-full h-48 sm:h-64 object-cover bg-black"
                   />
                   {hasPermission === false && (
@@ -162,7 +266,7 @@ export default function QuestionForm({ onSubmit }) {
                   >
                     {devices.map((device) => (
                       <option key={device.deviceId} value={device.deviceId}>
-                        {device.label || `CAMERA ${device.deviceId.slice(0, 5)}`}
+                        {device.label || `Camera ${device.deviceId.slice(0, 5)}`}
                       </option>
                     ))}
                   </select>
@@ -178,7 +282,13 @@ export default function QuestionForm({ onSubmit }) {
                   </button>
                   <button
                     type="button"
-                    onClick={() => setIsCameraOpen(false)}
+                    onClick={() => {
+                      setIsCameraOpen(false);
+                      if (streamRef.current) {
+                        streamRef.current.getTracks().forEach(track => track.stop());
+                        streamRef.current = null;
+                      }
+                    }}
                     className="flex-1 py-2 bg-white text-black border-2 border-black hover:bg-black hover:text-white transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 text-sm sm:text-base"
                   >
                     CANCEL
@@ -207,7 +317,7 @@ export default function QuestionForm({ onSubmit }) {
                     <span className="mx-2 text-black/30">|</span>
                     <button
                       type="button"
-                      onClick={() => setIsCameraOpen(true)}
+                      onClick={openCamera}
                       className="flex text-black items-center border-b-2 border-black hover:text-black/60 transition-colors duration-150"
                     >
                       <CameraIcon className="h-3 sm:h-4 w-3 sm:w-4 mr-1" />

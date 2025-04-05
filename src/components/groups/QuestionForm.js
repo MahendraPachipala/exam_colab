@@ -1,6 +1,7 @@
 "use client";
 import { useState, useRef, useEffect } from 'react';
 import { PhotoIcon, CameraIcon } from '@heroicons/react/24/outline';
+import Image from 'next/image';
 
 export default function QuestionForm({ onSubmit }) {
   const [imageFile, setImageFile] = useState(null);
@@ -71,7 +72,7 @@ export default function QuestionForm({ onSubmit }) {
         const constraints = { 
           video: { 
             deviceId: selectedDevice,
-            facingMode: isMobile ? 'environment' : 'user', // Prefer rear camera on mobile
+            facingMode: isMobile ? 'environment' : 'user',
             width: { ideal: 1280 },
             height: { ideal: 720 }
           } 
@@ -84,7 +85,6 @@ export default function QuestionForm({ onSubmit }) {
         
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
-          // iOS requires playing to be triggered by user interaction
           videoRef.current.play().catch(err => {
             console.error('Error playing video:', err);
             setError('Could not start camera. Tap to try again.');
@@ -95,7 +95,6 @@ export default function QuestionForm({ onSubmit }) {
         setHasPermission(false);
         setError('Could not access camera. Please check permissions.');
         
-        // Try again with less specific constraints if the first attempt fails
         try {
           const stream = await navigator.mediaDevices.getUserMedia({ 
             video: {
@@ -146,7 +145,6 @@ export default function QuestionForm({ onSubmit }) {
       setImageFile(file);
       setIsCameraOpen(false);
       
-      // Clean up stream after capture
       if (streamRef.current) {
         streamRef.current.getTracks().forEach(track => track.stop());
         streamRef.current = null;
@@ -161,7 +159,6 @@ export default function QuestionForm({ onSubmit }) {
     }
 
     try {
-      // First request permission with simple constraints
       const tempStream = await navigator.mediaDevices.getUserMedia({ video: true });
       tempStream.getTracks().forEach(track => track.stop());
       
@@ -211,7 +208,7 @@ export default function QuestionForm({ onSubmit }) {
           <p>{error}</p>
           {!isSecureContext() && (
             <p className="mt-2 text-sm">
-              You're currently on: {window.location.protocol}//{window.location.host}
+              {`You're currently on: ${window.location.protocol}//${window.location.host}`}
             </p>
           )}
         </div>
@@ -225,11 +222,17 @@ export default function QuestionForm({ onSubmit }) {
           <div className="mt-1 border-2 border-black">
             {imageFile ? (
               <div className="relative">
-                <img 
-                  src={URL.createObjectURL(imageFile)} 
-                  alt="Preview" 
-                  className="mx-auto max-h-64 w-full object-contain p-4"
-                />
+                {imageFile.type.startsWith('image/') ? (
+                  <Image
+                    src={URL.createObjectURL(imageFile)}
+                    alt="Preview"
+                    width={500}
+                    height={300}
+                    className="mx-auto max-h-64 w-full object-contain p-4"
+                  />
+                ) : (
+                  <div className="p-4 text-center">Unsupported file type</div>
+                )}
                 <button
                   type="button"
                   onClick={() => setImageFile(null)}
@@ -248,7 +251,7 @@ export default function QuestionForm({ onSubmit }) {
                     ref={videoRef} 
                     autoPlay 
                     playsInline
-                    muted // Required for autoplay on iOS
+                    muted
                     className="w-full h-48 sm:h-64 object-cover bg-black"
                   />
                   {hasPermission === false && (

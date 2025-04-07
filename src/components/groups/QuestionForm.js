@@ -2,6 +2,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { PhotoIcon, CameraIcon } from '@heroicons/react/24/outline';
 import Image from 'next/image';
+import socket from "@/lib/socket";
+
 
 export default function QuestionForm({ onSubmit }) {
   const [imageFile, setImageFile] = useState(null);
@@ -16,6 +18,8 @@ export default function QuestionForm({ onSubmit }) {
   const canvasRef = useRef(null);
   const streamRef = useRef(null);
 
+ 
+
   // Check if device is mobile
   useEffect(() => {
     setIsMobile(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
@@ -26,6 +30,8 @@ export default function QuestionForm({ onSubmit }) {
     return window.isSecureContext;
   };
 
+  
+  
   // Get available camera devices
   useEffect(() => {
     if (!isCameraOpen) return;

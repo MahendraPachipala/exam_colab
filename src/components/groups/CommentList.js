@@ -6,9 +6,9 @@ export default function CommentList({ comments = [] }) {
       </h4>
       <div className="space-y-3 mb-4 max-h-60 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
         {comments.length > 0 ? (
-          comments.map((comment) => (
+          comments.map((comment,index) => (
             <div 
-              key={comment._id || comment.id} 
+               key={index}
               className="flex items-start gap-3 p-2 hover:bg-gray-50 rounded transition-colors duration-150"
             >
               <div className="flex-shrink-0 h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center border border-gray-300">

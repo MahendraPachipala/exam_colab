@@ -6,11 +6,49 @@ import GroupHeader from '@/components/groups/GroupHeader';
 import QuestionForm from '@/components/groups/QuestionForm';
 import QuestionList from '@/components/groups/QuestionList';
 import LoadingSpinner from '@/components/groups/LoadingSpinner';
+import socket from '@/lib/socket';
 
 export default function GroupPageContent({ groupId, groupCode }) {
   const [questions, setQuestions] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  
   const router = useRouter();
+  
+
+  useEffect(() => {
+    const handleMessage = async (data) => {
+      try {
+    const res = await axios.get(`/api/groups/${groupCode}/${data}`);
+    console.log("API response:", res.data);
+    setQuestions((prevQuestions)=>[res.data, ...prevQuestions]);
+  } catch (err) {
+    console.error("Error fetching from API:", err.response?.data || err.message);
+  }
+      // setQuestions((prevQuestions) => [data, ...prevQuestions])
+    };
+
+    socket.on("message", handleMessage);
+
+    return () => {
+      socket.off("message", handleMessage);
+    };
+  }, []);
+
+
+  const handleAddQuestion = async (newQuestion) => {
+    try {
+      const { data } = await axios.post(`/api/groups/${groupCode}`, newQuestion);
+      socket.emit("message",data._id);
+      return { success: true };
+    } catch (error) {
+      console.error('Error adding question:', error);
+      return { success: false, error: error.message };
+    }
+  };
+  
+  
+  
+
 
   useEffect(() => {
     const fetchGroupData = async () => {
@@ -27,26 +65,49 @@ export default function GroupPageContent({ groupId, groupCode }) {
     fetchGroupData();
   }, [groupCode]);
 
-  const handleAddQuestion = async (newQuestion) => {
-    try {
-      const { data } = await axios.post(`/api/groups/${groupCode}`, newQuestion);
-      setQuestions([data, ...questions]);
-      return { success: true };
-    } catch (error) {
-      console.error('Error adding question:', error);
-      return { success: false, error: error.message };
-    }
-  };
+
+  useEffect(() => {
+    const handlecomment = async (data) => {
+      try {
+        const {questionId,commentText} = data;
+
+        setQuestions((prevQuestions) => {
+          const questionIndex = prevQuestions.findIndex(q => q._id === questionId);
+          if (questionIndex !== -1) {
+            const updatedQuestion = {
+              ...prevQuestions[questionIndex],
+              comments: [...prevQuestions[questionIndex].comments, { text: commentText, createdAt: new Date() }]
+            };
+            return [
+              ...prevQuestions.slice(0, questionIndex),
+              updatedQuestion,
+              ...prevQuestions.slice(questionIndex + 1)
+            ];
+          }
+          return prevQuestions;
+        });
+  } catch (err) {
+    console.error("Error fetching from API:", err.response?.data || err.message);
+  }
+      // setQuestions((prevQuestions) => [data, ...prevQuestions])
+    };
+
+    socket.on("comment", handlecomment);
+
+    return () => {
+      socket.off("comment", handlecomment);
+    };
+  }, []);
+  
 
   const handleAddComment = async (questionId, commentText) => {
     try {
-      const { data } = await axios.post('/api/comments', {
+      socket.emit("comment",{questionId, commentText});
+      await axios.post('/api/comments', {
         questionId,
         text: commentText,
       });
-      setQuestions(questions.map(q => 
-        q._id === data._id ? data : q
-      ));
+      
       return { success: true };
     } catch (error) {
       console.error('Error adding comment:', error);

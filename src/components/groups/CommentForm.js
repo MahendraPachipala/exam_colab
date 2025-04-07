@@ -1,6 +1,11 @@
 import { PaperAirplaneIcon } from '@heroicons/react/24/outline';
 
 export default function CommentForm({ value, onChange, onSubmit, isSubmitting }) {
+  const  handleEnterKey = (e) => {
+    if (e.key === 'Enter') {
+      onSubmit();
+    }
+  }
   return (
     <div className="flex space-x-2 border-2 border-black rounded-none focus-within:ring-2 focus-within:ring-black focus-within:ring-offset-2 transition-all duration-150">
       <input
@@ -10,6 +15,7 @@ export default function CommentForm({ value, onChange, onSubmit, isSubmitting })
         className="flex-1 text-black px-4 py-3 border-none focus:outline-none placeholder-black/30 text-sm sm:text-base bg-white"
         placeholder="ADD COMMENT..."
         disabled={isSubmitting}
+        onKeyDown={handleEnterKey}
         aria-label="Add a comment"
       />
       <button

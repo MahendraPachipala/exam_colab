@@ -6,18 +6,16 @@ export default function QuestionItem({ question, onAddComment }) {
   const [newComment, setNewComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imageError, setImageError] = useState(false);
-
+  
   const handleAddComment = async () => {
     if (!newComment.trim() || isSubmitting) return;
-
-    setIsSubmitting(true);
+   
     try {
-      const result = await onAddComment(question._id, newComment);
-      if (result.success) {
-        setNewComment('');
-      }
+      const cmt = newComment.trim();
+      setNewComment('');
+      await onAddComment(question._id, newComment);
     } finally {
-      setIsSubmitting(false);
+     
     }
   };
 

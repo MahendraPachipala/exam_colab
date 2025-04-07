@@ -1,6 +1,10 @@
 import QuestionItem from './QuestionItem';
+import socket from "@/lib/socket";
+
 
 export default function QuestionList({ questions, onAddComment }) {
+  
+
   if (questions.length === 0) {
     return (
       <div className="bg-white rounded-lg shadow-md p-6 text-center">

@@ -4,8 +4,7 @@ import dbConnect from '@/lib/dbConnect';
 
 export async function GET(request, { params }) {
   await dbConnect();
-  console.log('Fetching group data...');
-  console.log('Params:', params);
+ 
   const { code } = await params;
 
   try {
@@ -23,7 +22,7 @@ export async function GET(request, { params }) {
 
 export async function POST(request, { params }) {
   await dbConnect();
-  const { code } = params;
+  const { code } =await  params;
   const { image } = await request.json();
 
   try {

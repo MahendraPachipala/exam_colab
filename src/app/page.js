@@ -25,7 +25,7 @@ export default function Home() {
     
     if (joinCode.trim()) {
     if (res.data.isexist) {
-      const encrypted = CryptoJS.AES.encrypt(code, secret).toString();
+      const encrypted = CryptoJS.AES.encrypt(joinCode.trim(), secret).toString();
       const urlSafeEncrypted = encodeURIComponent(encrypted);
       router.push(`/${urlSafeEncrypted}`);
     }

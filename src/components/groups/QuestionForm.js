@@ -50,7 +50,9 @@ export default function QuestionForm({ onSubmit }) {
         const devices = await navigator.mediaDevices.enumerateDevices();
         const videoDevices = devices.filter(device => device.kind === 'videoinput');
         setDevices(videoDevices);
-        
+        if (videoDevices.length > 0) {
+          setSelectedDevice(videoDevices[0].deviceId);
+        }
       } catch (error) {
         console.error('Error enumerating devices:', error);
         setError('Could not access camera. Please check permissions.');
@@ -72,23 +74,14 @@ export default function QuestionForm({ onSubmit }) {
           streamRef.current.getTracks().forEach(track => track.stop());
         }
 
-        const constraints = isMobile
-  ? {
-      video: {
-        facingMode: { exact: 'environment' },
-        width: { ideal: 1280 },
-        height: { ideal: 720 },
-      },
-    }
-  : {
-      video: {
-        deviceId: selectedDevice,
-        facingMode: 'user',
-        width: { ideal: 1280 },
-        height: { ideal: 720 },
-      },
-    };
-
+        const constraints = { 
+          video: { 
+            deviceId: selectedDevice,
+            facingMode: isMobile ? 'environment' : 'user',
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          } 
+        };
 
         const stream = await navigator.mediaDevices.getUserMedia(constraints);
         setHasPermission(true);

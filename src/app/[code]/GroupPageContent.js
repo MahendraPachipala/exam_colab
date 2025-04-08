@@ -19,7 +19,6 @@ export default function GroupPageContent({ groupId, groupCode }) {
     const handleMessage = async (data) => {
       try {
     const res = await axios.get(`/api/groups/${groupCode}/${data}`);
-    console.log("API response:", res.data);
     setQuestions((prevQuestions)=>[res.data, ...prevQuestions]);
   } catch (err) {
     console.error("Error fetching from API:", err.response?.data || err.message);

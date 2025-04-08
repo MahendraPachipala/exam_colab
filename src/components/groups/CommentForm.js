@@ -1,3 +1,4 @@
+"use client";
 import { PaperAirplaneIcon } from '@heroicons/react/24/outline';
 
 export default function CommentForm({ value, onChange, onSubmit, isSubmitting }) {
@@ -8,12 +9,12 @@ export default function CommentForm({ value, onChange, onSubmit, isSubmitting })
   };
   
   return (
-    <div className="flex space-x-2 border-2 border-black rounded-none focus-within:ring-2 focus-within:ring-black focus-within:ring-offset-2 transition-all duration-150 w-full">
+    <div className="flex space-x-2 bg-black/40 backdrop-blur-sm border border-gray-700 rounded-lg focus-within:ring-2 focus-within:ring-white/20 focus-within:border-gray-600 transition-all duration-300 w-full">
       <input
         type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="flex-1 text-black px-3 sm:px-4 py-2 sm:py-3 border-none focus:outline-none placeholder-black/30 text-sm sm:text-base bg-white w-full"
+        className="flex-1 text-white/90 px-4 py-3 border-none focus:outline-none placeholder-white/40 bg-transparent w-full"
         placeholder="ADD COMMENT..."
         disabled={isSubmitting}
         onKeyDown={handleEnterKey}
@@ -22,10 +23,10 @@ export default function CommentForm({ value, onChange, onSubmit, isSubmitting })
       <button
         onClick={onSubmit}
         disabled={!value.trim() || isSubmitting}
-        className="bg-black text-white p-2 sm:p-3 border-l-2 border-black hover:bg-white hover:text-black transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black"
+        className="bg-white/10 text-white/80 p-3 hover:bg-white/20 hover:text-white transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed rounded-r-lg"
         aria-label="Submit comment"
       >
-        <PaperAirplaneIcon className="h-4 w-4 sm:h-5 sm:w-5" />
+        <PaperAirplaneIcon className="h-5 w-5" />
       </button>
     </div>
   );

@@ -10,11 +10,11 @@ export async function GET(request, { params }) {
   try {
     const group = await Group.findOne({ code });
     if (!group) {
-      return Response.json({ error: 'Group not found' }, { status: 404 });
+      return Response.json({ status: 200,isexist: false });
     }
 
     const questions = await Question.find({ groupId: group._id }).sort({ createdAt: -1 });
-    return Response.json({ group, questions });
+    return Response.json({ group, questions, isexist: true });
   } catch (error) {
     return Response.json({ error: 'Failed to fetch group data' }, { status: 500 });
   }

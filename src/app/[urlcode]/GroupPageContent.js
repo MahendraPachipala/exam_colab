@@ -11,19 +11,16 @@ import socket from '@/lib/socket';
 export default function GroupPageContent({ groupId, groupCode }) {
   const [questions, setQuestions] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  
   const router = useRouter();
-  
 
   useEffect(() => {
     const handleMessage = async (data) => {
       try {
-    const res = await axios.get(`/api/groups/${groupCode}/${data}`);
-    setQuestions((prevQuestions)=>[res.data, ...prevQuestions]);
-  } catch (err) {
-    console.error("Error fetching from API:", err.response?.data || err.message);
-  }
-      // setQuestions((prevQuestions) => [data, ...prevQuestions])
+        const res = await axios.get(`/api/groups/${groupCode}/${data}`);
+        setQuestions((prevQuestions)=>[res.data, ...prevQuestions]);
+      } catch (err) {
+        console.error("Error fetching from API:", err.response?.data || err.message);
+      }
     };
 
     socket.on("message", handleMessage);
@@ -32,7 +29,6 @@ export default function GroupPageContent({ groupId, groupCode }) {
       socket.off("message", handleMessage);
     };
   }, []);
-
 
   const handleAddQuestion = async (newQuestion) => {
     try {
@@ -44,10 +40,6 @@ export default function GroupPageContent({ groupId, groupCode }) {
       return { success: false, error: error.message };
     }
   };
-  
-  
-  
-
 
   useEffect(() => {
     const fetchGroupData = async () => {
@@ -64,12 +56,10 @@ export default function GroupPageContent({ groupId, groupCode }) {
     fetchGroupData();
   }, [groupCode]);
 
-
   useEffect(() => {
     const handlecomment = async (data) => {
       try {
         const {questionId,commentText} = data;
-
         setQuestions((prevQuestions) => {
           const questionIndex = prevQuestions.findIndex(q => q._id === questionId);
           if (questionIndex !== -1) {
@@ -85,10 +75,9 @@ export default function GroupPageContent({ groupId, groupCode }) {
           }
           return prevQuestions;
         });
-  } catch (err) {
-    console.error("Error fetching from API:", err.response?.data || err.message);
-  }
-      // setQuestions((prevQuestions) => [data, ...prevQuestions])
+      } catch (err) {
+        console.error("Error fetching from API:", err.response?.data || err.message);
+      }
     };
 
     socket.on("comment", handlecomment);
@@ -98,7 +87,6 @@ export default function GroupPageContent({ groupId, groupCode }) {
     };
   }, []);
   
-
   const handleAddComment = async (questionId, commentText) => {
     try {
       socket.emit("comment",{questionId, commentText});
@@ -106,7 +94,6 @@ export default function GroupPageContent({ groupId, groupCode }) {
         questionId,
         text: commentText,
       });
-      
       return { success: true };
     } catch (error) {
       console.error('Error adding comment:', error);
@@ -119,41 +106,36 @@ export default function GroupPageContent({ groupId, groupCode }) {
   }
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
+    <div className="min-h-screen bg-black/95 flex flex-col">
       <GroupHeader 
         groupCode={groupCode} 
         onLeave={() => router.push('/')}
-        className="border-b border-black"
       />
       
-      <main className="flex-1 max-w-4xl w-full mx-auto p-4 sm:p-6">
+      <main className="flex-1 max-w-4xl w-full mx-auto p-4 sm:p-6 space-y-6">
         {/* New Question Section */}
-        <div className="bg-white rounded-sm p-6 sm:p-8 space-y-6 sm:space-y-8 border border-black shadow-[0_4px_0_0_rgba(0,0,0,1)] hover:shadow-[0_6px_0_0_rgba(0,0,0,1)] transition-shadow duration-200 mb-6 sm:mb-8">
-          <div className="space-y-4">
-            <h2 className="text-xl sm:text-2xl font-bold text-black tracking-tight border-b border-black pb-2">
-              NEW QUESTION
-            </h2>
-            <QuestionForm onSubmit={handleAddQuestion} />
-          </div>
+        <div className="bg-black/50 backdrop-blur-lg rounded-xl p-6 border border-gray-800 shadow-[0_4px_30px_rgba(0,0,0,0.5)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.6)] transition-all duration-300">
+          <h2 className="text-xl font-bold text-white/90 tracking-tight border-b border-white/10 pb-3 mb-4">
+            NEW QUESTION
+          </h2>
+          <QuestionForm onSubmit={handleAddQuestion} />
         </div>
 
         {/* Group Questions Section */}
-        <div className="bg-white rounded-sm p-6 sm:p-8 space-y-6 sm:space-y-8 border border-black shadow-[0_4px_0_0_rgba(0,0,0,1)] hover:shadow-[0_6px_0_0_rgba(0,0,0,1)] transition-shadow duration-200">
-          <div className="space-y-4">
-            <h2 className="text-xl sm:text-2xl font-bold text-black tracking-tight border-b border-black pb-2">
-              GROUP QUESTIONS
-            </h2>
-            <QuestionList 
-              questions={questions} 
-              onAddComment={handleAddComment} 
-            />
-            
-            {questions.length === 0 && (
-              <p className="text-black/60 text-center py-6 sm:py-8 text-sm sm:text-base tracking-wider">
-                NO QUESTIONS YET. BE THE FIRST TO ASK.
-              </p>
-            )}
-          </div>
+        <div className="bg-black/50 backdrop-blur-lg rounded-xl p-6 border border-gray-800 shadow-[0_4px_30px_rgba(0,0,0,0.5)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.6)] transition-all duration-300">
+          <h2 className="text-xl font-bold text-white/90 tracking-tight border-b border-white/10 pb-3 mb-4">
+            GROUP QUESTIONS
+          </h2>
+          <QuestionList 
+            questions={questions} 
+            onAddComment={handleAddComment} 
+          />
+          
+          {questions.length === 0 && (
+            <p className="text-white/50 text-center py-6 text-sm tracking-wider">
+              NO QUESTIONS YET. BE THE FIRST TO ASK.
+            </p>
+          )}
         </div>
       </main>
     </div>

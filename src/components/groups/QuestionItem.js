@@ -15,35 +15,35 @@ export default function QuestionItem({ question, onAddComment }) {
       setNewComment('');
       await onAddComment(question._id, newComment);
     } finally {
-     
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="bg-white rounded-sm border border-black shadow-[0_4px_0_0_rgba(0,0,0,1)] hover:shadow-[0_6px_0_0_rgba(0,0,0,1)] transition-shadow duration-200">
-      <div className="p-4 sm:p-6 border-b border-black">
-        <h3 className="text-lg sm:text-xl font-bold text-black tracking-tight">
+    <div className="bg-black/50 backdrop-blur-md rounded-xl border border-gray-800 shadow-[0_4px_20px_rgba(0,0,0,0.3)] hover:shadow-[0_6px_25px_rgba(0,0,0,0.4)] transition-all duration-300">
+      <div className="p-5 border-b border-gray-800">
+        <h3 className="text-lg font-bold text-white/90 tracking-tight">
           QUESTION {question.questionNumber}
         </h3>
       </div>
       
-      <div className="p-4 sm:p-6">
+      <div className="p-5">
         {imageError ? (
-          <div className="w-full h-48 sm:h-64 bg-gray-100 flex items-center justify-center rounded-sm border-2 border-dashed border-gray-300">
-            <span className="text-gray-500">Image not available</span>
+          <div className="w-full h-48 bg-black/30 flex items-center justify-center rounded-lg border border-dashed border-gray-700">
+            <span className="text-white/50">Image not available</span>
           </div>
         ) : (
           <img 
             src={question.image} 
             alt={`Question ${question.questionNumber}`} 
-            className="w-full h-auto max-h-96 object-contain rounded-sm bg-gray-50 border border-black"
+            className="w-full h-auto max-h-96 object-contain rounded-lg bg-black/30 border border-gray-800"
             onError={() => setImageError(true)}
             loading="lazy"
           />
         )}
       </div>
       
-      <div className="p-4 sm:p-6 border-t border-black space-y-6">
+      <div className="p-5 border-t border-gray-800 space-y-5">
         <CommentList comments={question.comments} />
         <CommentForm 
           value={newComment}

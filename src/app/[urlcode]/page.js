@@ -1,7 +1,7 @@
 import GroupPageContent from './GroupPageContent';
 import dbConnect from '@/lib/dbConnect';
 import Group from '@/models/Group';
-
+import CryptoJS from 'crypto-js';
 async function getGroupData(code) {
   
   await dbConnect();
@@ -15,7 +15,10 @@ async function getGroupData(code) {
 }
 
 export default async function GroupPage({ params }) {
-  const { code } = await params;
+  const secret = "This is really a secret";
+  let { urlcode } = await params;
+  const decryptedBytes = CryptoJS.AES.decrypt(decodeURIComponent(urlcode), secret);
+  const code = decryptedBytes.toString(CryptoJS.enc.Utf8);
   const group = await getGroupData(code);
   
   if (!group) {
